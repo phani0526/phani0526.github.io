@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ profile.name }} · {{ profile.headline }}</title>
+  <meta name="description" content="{{ profile.description or profile.tagline }}">
+  <meta name="author" content="{{ profile.name }}">
+  {% if profile.site_url %}<link rel="canonical" href="{{ profile.site_url }}">{% endif %}
+
+  <meta property="og:type" content="profile">
+  <meta property="og:title" content="{{ profile.name }} · {{ profile.headline }}">
+  <meta property="og:description" content="{{ profile.description or profile.tagline }}">
+  {% if profile.site_url %}<meta property="og:url" content="{{ profile.site_url }}">{% endif %}
+  {% if profile.photo and profile.site_url %}<meta property="og:image" content="{{ profile.site_url.rstrip('/') }}/{{ profile.photo }}">{% endif %}
+  <meta name="twitter:card" content="summary">
+
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%2314213D'/><text x='32' y='42' font-family='Arial' font-weight='700' font-size='26' fill='%2394DBC4' text-anchor='middle'>{{ profile.initials }}</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,400..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": {{ profile.name | tojson }},
+    "jobTitle": {{ profile.headline | tojson }},
+    {% if profile.site_url %}"url": {{ profile.site_url | tojson }},{% endif %}
+    "sameAs": {{ [profile.linkedin, profile.github] | select | list | tojson }}
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <div class="frame">
+    <aside class="side">
+      <div class="id">
+        {% if profile.photo %}
+        <img class="avatar" src="{{ profile.photo }}" alt="{{ profile.name }}" width="72" height="72">
+        {% else %}
+        <span class="avatar avatar-initials" aria-hidden="true">{{ profile.initials }}</span>
+        {% endif %}
+        <div>
+          <p class="side-name">{{ profile.name }}</p>
+          <p class="side-role">{{ profile.headline }}</p>
+          {% if profile.location %}<p class="side-role">{{ profile.location }}</p>{% endif %}
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Sections">
+        <ul>
+          {% for s in sections if s.show_in_nav %}
+          <li><a href="#{{ s.id }}">{{ s.nav }}</a></li>
+          {% endfor %}
+        </ul>
+      </nav>
+
+      <div class="reach">
+        {% if profile.email %}<a class="button" href="mailto:{{ profile.email }}">Email me</a>{% endif %}
+        {% if profile.resume %}<a class="button button-quiet" href="{{ profile.resume }}" download>Resume (PDF)</a>{% endif %}
+        <ul class="links">
+          {% if profile.linkedin %}<li><a href="{{ profile.linkedin }}" rel="me">LinkedIn</a></li>{% endif %}
+          {% if profile.github %}<li><a href="{{ profile.github }}" rel="me">GitHub</a></li>{% endif %}
+          {% if profile.show_phone and profile.phone %}<li><a href="tel:{{ profile.phone | replace(' ', '') }}">{{ profile.phone }}</a></li>{% endif %}
+        </ul>
+      </div>
+    </aside>
+
+    <main id="main">
+      <header class="hero">
+        <h1 class="hero-name">{{ profile.name }}</h1>
+        <p class="hero-line">{{ profile.tagline }}</p>
+        <div class="hero-intro">{{ profile.intro_html | safe }}</div>
+        {% if profile.availability %}<p class="status"><span class="dot" aria-hidden="true"></span>{{ profile.availability }}</p>{% endif %}
+
+        {% if profile.pipeline %}
+        <figure class="pipeline">
+          <figcaption class="visually-hidden">Career so far, oldest first</figcaption>
+          <ol>
+            {% for stage in profile.pipeline %}
+            <li class="stage{% if loop.last %} stage-now{% endif %}" style="--i: {{ loop.index0 }}">
+              <span class="node" aria-hidden="true"></span>
+              <span class="when">{% if loop.last %}{{ stage.when }} to now{% else %}{{ stage.when }}{% endif %}</span>
+              <span class="what">{{ stage.role }}</span>
+              <span class="where">{{ stage.place }}</span>
+            </li>
+            {% endfor %}
+          </ol>
+        </figure>
+        {% endif %}
+      </header>
+
+      {% for s in sections %}
+      <section id="{{ s.id }}" class="section layout-{{ s.layout }}" aria-labelledby="{{ s.id }}-title">
+        <h2 id="{{ s.id }}-title">{{ s.title }}</h2>
+        {% if s.lead %}<p class="lead">{{ s.lead }}</p>{% endif %}
+        {% if s.intro %}<div class="prose">{{ s.intro | safe }}</div>{% endif %}
+
+        {% if s.entries %}
+        <div class="entries">
+          {% for e in s.entries %}
+          <article class="entry">
+            <div class="entry-head">{{ e.head | safe }}</div>
+            <div class="entry-body">
+              {{ e.body | safe }}
+              {% if s.layout == 'bios' %}
+              <button class="copy" type="button" data-copy>Copy text</button>
+              {% endif %}
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </section>
+      {% endfor %}
+
+      <footer class="foot">
+        <p>© {{ year }} {{ profile.name }}. Last updated {{ built }}.</p>
+      </footer>
+    </main>
+  </div>
+
+  <script src="site.js" defer></script>
+</body>
+</html>
